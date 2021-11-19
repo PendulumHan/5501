@@ -1,0 +1,320 @@
+---
+title: "Data visualization of U.S. Gun Violence"
+author: "Mengyuan Han"
+date: '2021-11-18T21:13:14-05:00'
+output: pdf_document
+tags:
+- R Markdown
+- plot
+- regression
+categories: R
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+```
+
+# Introduction
+
+Hi! I am a postgraduate student in the Business School of the University of New South Wales. In this semester's data visualization study, we were asked to create our own data visualization blog. The following is the data visualization I gave.
+In addition, the following background is fictitious and not real.
+
+
+# Background
+
+The US police gave part of the data on gun violence across the country from 2013 to 2018 to our school. They hope to get insightful visual content about these data. As a postgraduate student who is studying data visualization, I choose to analyze these data and give the US police some help as much as possible.
+
+
+#PartA - Data preparation 
+
+Through simple observation and understanding of the data, some variables are found to be useless, such as the source of the data. In addition, according to the data results, there is a big difference between the data in 2013 and the data in the following years, and this data seems to have problems such as incompleteness. Moreover, the data of 2018 is only the first three months, which is not enough to show the information of one year, so in the following data visualization, the data of 2013 and 2018 are not used.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+setwd("D:/Study/UNSW/COMM5501/a3final")
+
+library(tidyverse)
+library(dplyr)
+library(maps)
+library(rgeos)
+library(raster)
+library(leaflet)
+library(lubridate)
+library(readr)
+library(cowplot)
+library("leaflet")
+library(plotly)
+library(DT)
+#library(tidyquant)
+#read file
+violence<-read_csv("gun-violence.csv")
+
+##Simply view the data to find possible problems with the data.
+# 
+# re_data <- violence%>%
+#   na.omit(violence$date)
+# 
+# cols_to_change_to_num <- c('n_killed','n_injured','congressional_district','latitude','longitude','n_guns_involved','state_house_district','state_senate_district')
+# re_data[ ,cols_to_change_to_num] <- lapply(re_data[ ,cols_to_change_to_num],as.numeric)
+# 
+# date_killed = aggregate(re_data$n_killed,by= list(dateNkilled=re_data$date),sum)
+# 
+# stock <- data.frame(date_killed)
+# stock
+# 
+# colnames(stock) <- append('date','sum_n_Killed')
+# 
+# fig <- plot_ly(stock, type = 'scatter', mode = 'lines')%>%
+#   add_trace(x = ~date, y = ~sum_n_Killed, name = 'sum_n_Killed')%>%
+#   layout(showlegend = F)
+# options(warn = -1)
+# 
+# fig <- fig %>%
+#   layout(
+#     xaxis = list(zerolinecolor = '#ffff',
+#                  zerolinewidth = 2,
+#                  gridcolor = 'ffff'),
+#     yaxis = list(zerolinecolor = '#ffff',
+#                  zerolinewidth = 2,
+#                  gridcolor = 'ffff'),
+#     plot_bgcolor='#e5ecf6', width = 700)
+# 
+# 
+# fig
+
+```
+
+
+
+#PartB - Data Visualisations
+
+
+In order to find the possible patterns of changes in the number of deaths and injuries caused by gun violence, the daily death toll and the number of injured due to gun violence were summed up separately. And display it in time series. In order to find the year-on-year change pattern of casualties caused by gun violence, the four-year data will be plotted separately.
+
+The next four pictures are images of the number of deaths caused by gun violence each year.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+a1<-violence%>% mutate(year=as.numeric(substring(date,1,4)))%>%
+  filter(year==2014)%>%   
+  group_by(year,date)%>%
+  summarize(sum_killed=sum(n_killed,na.rm=TRUE))%>%
+  plot_ly()%>%
+  add_trace(x = ~date,
+            y = ~sum_killed,
+            mode = "scatter")%>%
+  layout(title = '<b>2014<b>', #<b>text<b> for bold text with plot_ly()
+         xaxis = list(title = 'Date'), 
+         yaxis = list(title = 'Number of killed'))
+a1
+
+a2<-violence%>% mutate(year=as.numeric(substring(date,1,4)))%>%
+  filter(year==2015)%>%   
+  group_by(year,date)%>%
+  summarize(sum_killed=sum(n_killed,na.rm=TRUE))%>%
+  plot_ly()%>%
+  add_trace(x = ~date,
+            y = ~sum_killed,
+            mode = "scatter")%>%
+  layout(title = '<b>2015<b>', #<b>text<b> for bold text with plot_ly()
+         xaxis = list(title = 'Date'), 
+         yaxis = list(title = 'Number of killed'))
+a2
+a3<-violence%>% mutate(year=as.numeric(substring(date,1,4)))%>%
+  filter(year==2016)%>%   
+  group_by(year,date)%>%
+  summarize(sum_killed=sum(n_killed,na.rm=TRUE))%>%
+  plot_ly()%>%
+  add_trace(x = ~date,
+            y = ~sum_killed,
+            mode = "scatter")%>%
+  layout(title = '<b>2016<b>', #<b>text<b> for bold text with plot_ly()
+         xaxis = list(title = 'Date'), 
+         yaxis = list(title = 'Number of killed'))
+a3
+a4<-violence%>% mutate(year=as.numeric(substring(date,1,4)))%>%
+  filter(year==2017)%>%   
+  group_by(year,date)%>%
+  summarize(sum_killed=sum(n_killed,na.rm=TRUE))%>%
+  plot_ly()%>%
+  add_trace(x = ~date,
+            y = ~sum_killed,
+            mode = "scatter")%>%
+  layout(title = '<b>2017<b>', #<b>text<b> for bold text with plot_ly()
+         xaxis = list(title = 'Date'), 
+         yaxis = list(title = 'Number of killed'))
+a4
+```
+
+
+
+
+# 
+
+
+
+
+Similarly, the next four pictures are images of the number of people injured each year due to gun violence.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Figure 2
+b1<-violence%>% mutate(year=as.numeric(substring(date,1,4)))%>%
+  filter(year==2014)%>%  
+  group_by(date)%>%summarise(mean_injured=mean(n_injured,na.rm=TRUE))%>%
+  ggplot(aes(x=date,y=mean_injured))+geom_line()+
+  scale_x_date(date_labels="%b %d")+
+  theme_bw()+
+  labs(x="Date",y="Number of injured",title="2014") 
+
+b1<-violence%>% mutate(year=as.numeric(substring(date,1,4)))%>%
+  filter(year==2014)%>%   
+  group_by(year,date)%>%
+  summarize(sum_injured=sum(n_injured,na.rm=TRUE))%>%
+  plot_ly()%>%
+  add_trace(x = ~date,
+            y = ~sum_injured,
+            mode = "scatter")%>%
+  layout(title = '<b>2014<b>', #<b>text<b> for bold text with plot_ly()
+         xaxis = list(title = 'Date'), 
+         yaxis = list(title = 'Number of injured'))
+b1
+b2<-violence%>% mutate(year=as.numeric(substring(date,1,4)))%>%
+  filter(year==2015)%>%   
+  group_by(year,date)%>%
+  summarize(sum_injured=sum(n_injured,na.rm=TRUE))%>%
+  plot_ly()%>%
+  add_trace(x = ~date,
+            y = ~sum_injured,
+            mode = "scatter")%>%
+  layout(title = '<b>2015<b>', #<b>text<b> for bold text with plot_ly()
+         xaxis = list(title = 'Date'), 
+         yaxis = list(title = 'Number of injured'))
+b2
+b3<-violence%>% mutate(year=as.numeric(substring(date,1,4)))%>%
+  filter(year==2016)%>%   
+  group_by(year,date)%>%
+  summarize(sum_injured=sum(n_injured,na.rm=TRUE))%>%
+  plot_ly()%>%
+  add_trace(x = ~date,
+            y = ~sum_injured,
+            mode = "scatter")%>%
+  layout(title = '<b>2016<b>', #<b>text<b> for bold text with plot_ly()
+         xaxis = list(title = 'Date'), 
+         yaxis = list(title = 'Number of injured'))
+b3
+
+b4<-violence%>% mutate(year=as.numeric(substring(date,1,4)))%>%
+  filter(year==2017)%>%   
+  group_by(year,date)%>%
+  summarize(sum_injured=sum(n_injured,na.rm=TRUE))%>%
+  plot_ly()%>%
+  add_trace(x = ~date,
+            y = ~sum_injured,
+            mode = "scatter")%>%
+  layout(title = '<b>2017<b>', #<b>text<b> for bold text with plot_ly()
+         xaxis = list(title = 'Date'), 
+         yaxis = list(title = 'Number of injured'))
+b4
+```
+The results of data visualization show that the number of casualties due to gun violence fluctuates greatly each year, showing an unstable trend. But on the whole, there are more casualties in the middle of the year and the new year. This may be due to the fact that people in this time period are more inclined to social activities, which leads to more interpersonal communication and more conflicts.
+
+
+
+In addition, we also hope that we can help the US police to better prevent potential crowds in gun violence incidents. So the age and number of people involved in gun violence are counted.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#Figure 3
+age1<-violence%>% mutate(year=as.numeric(substring(date,1,4)))%>%
+  filter(year==2014)%>%
+  dplyr::select(participant_age)%>%na.omit()%>%unlist()
+age1<-gsub("(\\d+)::(\\d+)||",'\\2',age1)
+age1<-na.omit(as.numeric(unlist(strsplit(age1,"||",fixed=TRUE))))
+
+c1<-plot_ly()%>%
+  add_trace(x = ~age1,
+              mode = "histogram")%>%
+  layout(title = '<b>2014<b>', #<b>text<b> for bold text with plot_ly()
+         xaxis = list(title = 'age'), 
+         yaxis = list(title = 'Number'))
+c1
+
+age2<-violence%>% mutate(year=as.numeric(substring(date,1,4)))%>%
+  filter(year==2015)%>%
+  dplyr::select(participant_age)%>%na.omit()%>%unlist()
+age2<-gsub("(\\d+)::(\\d+)||",'\\2',age2)
+age2<-na.omit(as.numeric(unlist(strsplit(age2,"||",fixed=TRUE))))
+
+c2<-plot_ly()%>%
+  add_trace(x = ~age2,
+            mode = "histogram")%>%
+  layout(title = '<b>2015<b>', #<b>text<b> for bold text with plot_ly()
+         xaxis = list(title = 'age'), 
+         yaxis = list(title = 'Number'))
+c2
+
+age3<-violence%>% mutate(year=as.numeric(substring(date,1,4)))%>%
+  filter(year==2016)%>%
+  dplyr::select(participant_age)%>%na.omit()%>%unlist()
+age3<-gsub("(\\d+)::(\\d+)||",'\\2',age3)
+age3<-na.omit(as.numeric(unlist(strsplit(age3,"||",fixed=TRUE))))
+
+c3<-plot_ly()%>%
+  add_trace(x = ~age3,
+            mode = "histogram")%>%
+  layout(title = '<b>2016<b>', #<b>text<b> for bold text with plot_ly()
+         xaxis = list(title = 'age'), 
+         yaxis = list(title = 'Number'))
+c3
+
+age4<-violence%>% mutate(year=as.numeric(substring(date,1,4)))%>%
+  filter(year==2017)%>%
+  dplyr::select(participant_age)%>%na.omit()%>%unlist()
+age4<-gsub("(\\d+)::(\\d+)||",'\\2',age4)
+age4<-na.omit(as.numeric(unlist(strsplit(age4,"||",fixed=TRUE))))
+age4<-subset(age4,age4<200)
+c4<-plot_ly()%>%
+  add_trace(x = ~age4,
+            mode = "histogram")%>%
+  layout(title = '<b>2017<b>', #<b>text<b> for bold text with plot_ly()
+         xaxis = list(title = 'age'), 
+         yaxis = list(title = 'Number'))
+c4
+```
+Judging from the overall performance, it is not difficult to see that gun violence occurs mostly among teenagers and adults between their teens and thirties. Moreover, the growth of young people between the ages of ten and twenty is showing a sharp increase. Since then, the number of people decreased with increasing age. What's more serious is that the peak number of youth-related gun violence incidents is still increasing year by year. It seems that the US police should pay more attention to the illegal behavior of young people.
+
+
+Because of the American political system. In the absence of federal legislative action, many states have enacted their own legislation. Their laws and changes in state gun laws have created mature opportunities for research, but only selected studies of state laws have a strict and clear indication of a reduction in gun violence. (Branas,Reeping&Rudolph) It is not difficult to imagine that gun violence is closely related to the politics of a region. In the United States, various political elections are often involved behind such politics. According to the congressional district data provided by the data set, a scatter plot of gun violence casualties and congressional districts is drawn.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+###
+sct <-violence%>% mutate(year=as.numeric(substring(date,1,4)))%>%
+  filter(year==2017)%>%
+  group_by(congressional_district)%>%summarise(sum_injured = sum(n_injured,na.rm=TRUE),
+                             sum_killed = sum(n_killed,na.rm=TRUE))
+
+plot_ly(data = sct, x = ~sum_injured, y = ~sum_killed, color= ~congressional_district) %>%
+  layout(title = '<b>2017<b>',
+         xaxis = list(title = 'Per capita income', range=c(0, 5000)), 
+         yaxis = list(title = 'Life expectancy',range=c(0,5000)), 
+         legend = list(title=list(text='<b> Species of Iris </b>')))
+```
+According to the image, it can be seen that the death toll caused by gun violence is closely related to political congressional districts. This is enough to explain the seriousness of the political and legal differences between states caused by federal legislation in the United States.
+
+
+Finally, in order to further reflect the differences in gun violence between states due to the lack of federal legislation. I chose to use a map to show how many people have been injured by gun violence in different states over the past four years.
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+state_killed = aggregate(violence$n_killed,by= list(stateNkilled=violence$state),sum)
+
+state_killed<-state_killed%>%filter(stateNkilled!="District of Columbia")
+
+violence%>% mutate(year=as.numeric(substring(date,1,4)))%>%
+  filter(state!="District of Columbia")%>% 
+  #na.omit(violence$n_injured)%>%
+  group_by(state)%>%summarise(sum_injured=sum(n_injured))%>%
+  tibble(State.abb=state.abb)%>%
+  plot_geo()%>%
+  add_trace(locationmode="USA-states",
+            locations= ~ State.abb,
+            z= ~ sum_injured,
+            reversescale=T)%>%
+  layout(geo=list(showcountries=TRUE,scope="usa"))
+```
+
+
+References
+
+Branas, Charles C ; Reeping, Paul M ; Rudolph, Kara E,"United States: American Medical Association" JAMA psychiatry (Chicago, Ill.), 2021-03-01, Vol.78 (3), p.243-244
